@@ -1,398 +1,124 @@
 ---
-title: "R Notebook"
+title: "WORKING WITH DATABASES MýQL"
 output: html_notebook
+Edit: Ms Nguyen Xuan Huy - FPTU HCM
 ---
 
-# Lab: Data Science with R – Basic to Advanced
+## Demo: Kết nối CSDL và tạo 1 bảng
 
-## Scalar & Vector
+1.  Kết nối đến cơ sở dữ liệu.
+
+2.  Tạo bảng mới với các cột và khóa chính/phụ cần thiết.
+
+3.  Thêm dữ liệu vào bảng.
+
+    ## Kiểm tra dữ liệu đã thêm.
+
+#1. kết nối đến cơ sở dữ liệu MySQL chạy trên XAMPP
+
+## Cài đặt packages:
 
 ```{r}
-### YOUR CODE HERE 
-# Tạo 1 scalar (số đơn) và 1 vector numeric gồm 5 số bất kỳ
-### END CODE
+install.packages("DBI")
 
 ```
 
 ```{r}
-scalar_num <- 42
-vec_num <- c(1, 3, 5, 7, 9)
-scalar_num
-vec_num
-```
-
-```{r}
-### YOUR CODE HERE
-# Tạo vector logical gồm TRUE/FALSE xen kẽ 6 phần tử
-### END CODE
+install.packages("RMySQL")
 
 ```
 
 ```{r}
-vec_log <- c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE)
-vec_log
+install.packages("RMariaDB")
 ```
 
-### Vector character
+## cập nhật library
 
 ```{r}
-### YOUR CODE HERE
-# Tạo vector character gồm tên 3 thành phố
-### END CODE
+library(DBI)
 ```
 
 ```{r}
-vec_city <- c("Hanoi", "Danang", "HCM")
-vec_city
-```
-
-### Vector indexin
-
-```{r}
-### YOUR CODE HERE
-# Lấy phần tử 2 và 4 từ vec_num (đã tạo trước)
-### END CODE
-
+library(RMySQL)
 ```
 
 ```{r}
-Vector_index <- vec_num[c(2,4)]
-Vector_index
+library(RMariaDB)
 ```
 
-## Matrix & Dataframe
+## Thiết lập thông tin kết nối đến server
 
 ```{r}
-### YOUR CODE HERE
-# Tạo ma trận 3x3 gồm các số từ 1–9 và dataframe chứa 2 cột: tên và tuổi
-### END CODE
-
-```
-
-```{r}
-m <- matrix(1:9, nrow = 3, ncol = 3)
-df <- data.frame(Name = c("An", "Binh", "Chi"), Age = c(20, 21, 22))
-
-m
-df
-```
-
-### Ma trận identity
-
-```{r}
-### YOUR CODE HERE
-# Tạo ma trận đơn vị 4x4
-### END CODE
-
+# Thiết lập thông tin kết nối
+host <- "127.0.0.1"  # hoặc "localhost"
+port <- 3306         # cổng mặc định của MySQL
+dbname <- "fpt_demo"
+user <- "user_mobile"
+password <- "abc123admin"
 ```
 
 ```{r}
-identity_matrix <- diag(4)
-identity_matrix
-```
-
-### Cộng ma trận
-
-```{r}
-### YOUR CODE HERE
-# Tạo hai ma trận 2x2 và cộng chúng
-### END CODE
-
+# Tạo kết nối tới cơ sở dữ liệu
+con <- dbConnect(RMySQL::MySQL(),
+                 host = host,
+                 port = port,
+                 dbname = dbname,
+                 user = user,
+                 password = password)
 ```
 
 ```{r}
-m1 <- matrix(1:4,2,2); m2 <- matrix(5:8,2,2); m1 + m2
+# Tạo kết nối đến cơ sở dữ liệu
+conn <- tryCatch({
+  dbConnect(RMariaDB::MariaDB(),
+            dbname = dbname,
+            host = host,
+            port = port,
+            user = user,
+            password = password)
+}, error = function(e) {
+  stop("Không thể kết nối đến cơ sở dữ liệu: ", e$message)
+})
 
+# Kiểm tra kết nối
+if (!dbIsValid(conn)) {
+  stop("Không thể kết nối đến cơ sở dữ liệu")
+} else {
+  print("Kết nối thành công")
+}
 ```
 
-### Nhân ma trận
+-   Sử dụng hàm dbExecute để thực thi câu lệnh SQL tạo bảng mới và thêm dữ liệu vào bảng.
+-   khai báo cột khóa chính và cột khóa phụ:
 
 ```{r}
-### YOUR CODE HERE
-# Tính tích ma trận (matrix multiplication) của m1 và m2
-### END CODE
+# Tạo bảng nhân viên
+dbExecute(conn, "
+  CREATE TABLE employee (
+    SupportRepId INT NOT NULL AUTO_INCREMENT,
+    FirstName VARCHAR(255),
+    LastName VARCHAR(255),
+    Department VARCHAR(255),
+    Phone VARCHAR(20),
+    Email VARCHAR(255),
+    PRIMARY KEY (SupportRepId)
+  )
+")
 
-```
-
-```{r}
-m1 %*% m2
-```
-
-### Dataframe
-
-```{r}
-### YOUR CODE HERE
-# Thêm cột Gender vào df (các giá trị "M","F","F")
-### END CODE
-
-```
-
-```{r}
-df$Gender <- c("M","F","F")
-df$Gender
-```
-
-### Lọc dữ liệu
-
-```{r}
-### YOUR CODE HERE
-# Lọc các hàng có Age > 21
-### END CODE
-```
-
-```{r}
-subset(df, Age > 21)
+print("Tạo bảng nhân viên thành công")
 ```
 
 ```{r}
-### YOUR CODE HERE
-# Sắp xếp df theo Age giảm dần
-### END CODE
-```
-
-```{r}
-df[order(df$Age, decreasing = TRUE), ]
-
-```
-
-## List
-
-```{r}
-### YOUR CODE HERE
-# Tạo list chứa scalar, vector và dataframe ở trên
-### END CODE
-
-```
-
-```{r}
-my_list <- list(my_scalar = scalar_num, my_vector = vec_num, my_df = df)
-my_list
-```
-
-## Data Type Conversion
-
-### Numeric ↔ Character
-
-```{r}
-### YOUR CODE HERE
-# Chuyển vector numeric sang character
-### END CODE
-
-```
-
-```{r}
-vec_char <- as.character(vec_num)
-vec_char
-```
-
-### Numeric → Character vector nhiều giá trị
-
-```{r}
-### YOUR CODE HERE
-# Chuyển c(10,20,30) thành character
-### END CODE
-
-```
-
-```{r}
-as.character(c(10,20,30))
-```
-
-### Character → Numeric
-
-```{r}
-### YOUR CODE HERE
-# Chuyển vector c("5","7","9") sang numeric
-### END CODE
-```
-
-```{r}
-as.numeric(c("5","7","9"))
-```
-
-### Kiểm tra kiểu dữ liệu
-
-```{r}
-### YOUR CODE HERE
-# Kiểm tra class của vec_char
-### END CODE
-```
-
-```{r}
-class(vec_char)
-```
-
-### Levels của factor
-
-```{r}
-### YOUR CODE HERE
-# Lấy danh sách levels của df$Name
-### END CODE
-
-```
-
-```{r}
-levels(df$Name)
-```
-
-### Round
-
-```{r}
-### YOUR CODE HERE
-# Làm tròn 3.14159 đến 3 chữ số thập phân
-### END CODE
-
-```
-
-```{r}
-round(3.14159, 3)
-```
-
-### nchar
-
-```{r}
-### YOUR CODE HERE
-# Đếm số ký tự trong chuỗi "Data Science"
-### END CODE
-
-```
-
-```{r}
-nchar("Data Science")
-
-```
-
-### toupper & tolower
-
-```{r}
-### YOUR CODE HERE
-# Chuyển "hello fpt" thành chữ hoa
-### END CODE
-
-```
-
-```{r}
-toupper("hello fpt")
-```
-
-### paste0
-
-```{r}
-### YOUR CODE HERE
-# Nối "Hello" và "FPT" không có khoảng trắng
-### END CODE
-
-```
-
-```{r}
-paste0("Hello","FPT")
-
-```
-
-### Character ↔ Factor
-
-```{r}
-### YOUR CODE HERE
-# Chuyển cột Name trong df thành factor
-### END CODE
-
-```
-
-```{r}
-df$Name <- as.factor(df$Name)
-df$Name
-```
-
-### Logical ↔ Numeric
-
-```{r}
-### YOUR CODE HERE
-# Tạo vector logical từ vec_num (TRUE nếu > 5), sau đó chuyển sang numeric
-### END CODE
-
-```
-
-```{r}
-vec_logical <- vec_num > 5
-vec_numeric <- as.numeric(vec_logical)
-vec_logical
-vec_numeric
-```
-
-### Math, Variables, and Strings
-
-```{r}
-### YOUR CODE HERE
-# Tạo biến x=10, y=3, tính x^y
-### END CODE
-
-```
-
-```{r}
-x <- 10; y <- 3; x^y
-
-```
-
-### Hàm toán học
-
-```{r}
-### YOUR CODE HERE
-# Tính trung bình (mean) và độ lệch chuẩn (sd) của vec_num
-### END CODE
-
-```
-
-```{r}
-mean_vec_num <- mean(vec_num)
-sd_mean_vec_num <- sd(vec_num)
-mean_vec_num
-sd_mean_vec_num
-```
-
-### Concatenating Data
-
-```{r}
-### YOUR CODE HERE
-# Gộp hai vector numeric: c(1,2,3) và c(4,5,6)
-### END CODE
-
-```
-
-```{r}
-vector1 <- c(1,2,3)
-vector2 <- c(4,5,6)
-con_vec <- c(vector1, vector2)
-con_vec
-```
-
-### rbind()
-
-```{r}
-### YOUR CODE HERE
-# Tạo hai dataframe df1 và df2 có cùng cột Name, Age, rồi rbind
-### END CODE
-
-```
-
-```{r}
-df1 <- data.frame(Name=c("An","Binh"), Age=c(20,21))
-df2 <- data.frame(Name=c("Chi","Dung"), Age=c(22,23))
-rbind(df1, df2)
-
-```
-
-### cbind()
-
-```{r}
-### YOUR CODE HERE
-# Tạo 2 vector: height, weight và ghép thành dataframe bằng cbind
-### END CODE
-
-```
-
-```{r}
-height <- c(160,170,180)
-weight <- c(50,60,70)
-cbind(height, weight)
-
+# Thêm dữ liệu vào bảng
+dbExecute(conn, "
+  INSERT INTO employee (SupportRepId, FirstName, LastName, Department, Phone, Email)
+  VALUES
+  (1, 'Triệu Văn', 'QUang', 'Kinh doanh', '07856643a435', 'quang@gmail.com'),
+  (2, 'Nguyễn Việt', 'Thnah', 'Mảketing', '044457224872', 'thanh@gmail.com'),
+  (3, 'Trân Thanh', 'Tài', 'Sale', '094a7845454', 'tài@gmail.com'),
+  (4, 'Quản văn', 'Binh', 'Tư vấn', '0872312312121', 'hai@gmail.com'),
+  (5, 'Vũ văn', 'Hải', 'Giám đốc', '07213242 54', 'hoa@gmail.com')
+")
+
+print("Thêm dữ liệu vào bảng nhân viên thành công")
 ```
